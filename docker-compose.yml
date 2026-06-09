@@ -1,0 +1,229 @@
+x-acceptance: &acceptance
+  image: oven/bun:alpine
+  volumes:
+    - .:/src
+  working_dir: /src
+  tty: true
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+    cache:
+      condition: service_started
+    db-migration:
+      condition: service_completed_successfully
+    # localstack:
+    #   condition: service_started
+  environment:
+    CACHE_HOST: cache
+    RABBIT_HOST: rabbitmq
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+  env_file:
+    - path: .env.development
+  ports:
+    - 3001:3001
+
+x-fastify: &fastify
+  tty: true
+  # healthcheck:
+  #   test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+  #   interval: 30s
+  #   timeout: 5s
+  #   retries: 4
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+    cache:
+      condition: service_started
+    db-migration:
+      condition: service_completed_successfully
+    # localstack:
+    #   condition: service_started
+    # otel-collector:
+    #   condition: service_healthy
+  networks:
+    - default
+    # - elastic
+  environment:
+    CACHE_HOST: cache
+    RABBIT_HOST: rabbitmq
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+  env_file:
+    - path: .env.development
+  ports:
+    - ${API_PORT:-3000}:3000
+
+services:
+  local:
+    <<: *fastify
+    build:
+      context: .
+    profiles:
+      - local
+      - test
+
+  dev:
+    <<: *fastify
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        bun run prisma:generate
+        bun run dev
+      "
+    profiles:
+      - dev
+
+  acceptance:
+    <<: *acceptance
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        sleep infinity
+      "
+    profiles:
+      - local
+      - dev
+
+  acceptance-once:
+    <<: *acceptance
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        bun run test:acceptance
+      "
+    profiles:
+      - test
+
+  rabbitmq:
+    image: rabbitmq
+    restart: always
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq/data
+      - rabbitmq:/var/log/rabbitmq/log
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-guest}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBIT_password:-guest}
+    env_file:
+      - path: .env.development
+    ports:
+      - ${RABBIT_PORT:-5672}:5672
+      - 15672:15672
+
+  cache:
+    image: valkey/valkey
+    restart: always
+    command: >
+      valkey-server --save "" --appendonly no
+      --notify-keyspace-events Ex
+      --loglevel notice
+      --requirepass admin123
+    volumes:
+      - cache:/data
+    env_file:
+      - path: .env.development
+    ports:
+      - ${CACHE_PORT:-6379}:6379
+
+  db:
+    image: postgres:latest
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploying via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER
+      interval: 20s
+      timeout: 5s
+      retries: 6
+    environment:
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+      POSTGRES_USER: ${DATABASE_USERNAME:-dev}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-admin123}
+      POSTGRES_DB: ${DATABASE_DB:-fastify}
+    env_file:
+      - path: .env.development
+    ports:
+      - ${DATABASE_PORT:-5432}:5432
+
+  db-migration:
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: sh ./scripts/dockerComposeMigrate.sh
+    depends_on:
+      db:
+        condition: service_healthy
+    tty: true
+    ports:
+      - 3001:3001
+    environment:
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+    env_file:
+      - path: .env.development
+    profiles:
+      - local
+      - dev
+      - test
+
+  # localstack:
+  #   image: localstack/localstack
+  #   ports:
+  #     - "127.0.0.1:4566:4566" # LocalStack gateway
+  #     - "127.0.0.1:4510-4559:4510-4559" # External services port range
+  #   environment:
+  #     # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+  #     - DEBUG=${DEBUG:-0}
+  #   volumes:
+  #     - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   profiles:
+  #     - local
+  #     - dev
+  #     - test
+
+  # otel-collector:
+  #   image: otel/opentelemetry-collector-contrib
+  #   volumes:
+  #     - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+  #   ports:
+  #     - 1888:1888 # pprof extension
+  #     - 8888:8888 # Prometheus metrics exposed by the Collector
+  #     - 8889:8889 # Prometheus exporter metrics
+  #     - 13133:13133 # health_check extension
+  #     - 4317:4317 # OTLP gRPC receiver
+  #     - 4318:4318 # OTLP http receiver
+  #     - 55679:55679 # zpages extension
+  #   profiles:
+  #     - local
+  #     - dev
+
+volumes:
+  rabbitmq:
+  cache:
+  postgres-data:
+
+networks:
+  cache:
+  # elastic:

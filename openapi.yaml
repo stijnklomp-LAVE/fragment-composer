@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  description: Testing the Fastify swagger API
+  title: Test swagger
+  version: 0.1.0
+components:
+  securitySchemes:
+    apiKey:
+      in: header
+      name: apiKey
+      type: apiKey
+  schemas:
+    def-0:
+      type: object
+      properties:
+        statusCode:
+          type: number
+        code:
+          type: string
+        error:
+          type: string
+        message:
+          type: string
+      title: HttpError
+paths:
+  /healthz:
+    get:
+      responses:
+        "204":
+          description: Default Response
+  /readyz:
+    get:
+      responses:
+        "204":
+          description: Default Response
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/notes:
+    get:
+      parameters:
+        - schema:
+            minimum: 1
+            type: number
+          in: query
+          name: page
+          required: true
+        - schema:
+            maximum: 100
+            type: number
+          in: query
+          name: perPage
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - notes
+                properties:
+                  notes:
+                    type: array
+                    items:
+                      type: object
+                      allOf:
+                        - type: object
+                          required:
+                            - note
+                            - owner
+                          properties:
+                            note:
+                              maxLength: 300
+                              type: string
+                            owner:
+                              maxLength: 100
+                              type: string
+                        - type: object
+                          required:
+                            - createdAt
+                            - id
+                            - updatedAt
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            id:
+                              type: number
+                            updatedAt:
+                              format: date-time
+                              type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - note
+                - owner
+              properties:
+                note:
+                  maxLength: 300
+                  type: string
+                owner:
+                  maxLength: 100
+                  type: string
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - note
+                properties:
+                  message:
+                    type: string
+                  note:
+                    type: object
+                    allOf:
+                      - type: object
+                        required:
+                          - note
+                          - owner
+                        properties:
+                          note:
+                            maxLength: 300
+                            type: string
+                          owner:
+                            maxLength: 100
+                            type: string
+                      - type: object
+                        required:
+                          - createdAt
+                          - id
+                          - updatedAt
+                        properties:
+                          createdAt:
+                            format: date-time
+                            type: string
+                          id:
+                            type: number
+                          updatedAt:
+                            format: date-time
+                            type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+servers:
+  - description: Development server
+    url: http://localhost:3000
+tags:
+  - description: User related end-points
+    name: user
+  - description: Code related end-points
+    name: code
+externalDocs:
+  description: Find more info here
+  url: https://swagger.io

@@ -1,0 +1,33 @@
+[install.scopes]
+# myorg = { token = "$NPM_TOKEN", url = "https://registry.myorg.com/" }
+
+[install]
+minimumReleaseAge = 259200 # 3 days
+
+[install.security]
+scanner = "@socketsecurity/bun-security-scanner"
+
+[resolve]
+alias = { "@" = "./src" }
+
+[test]
+coverageDir = "test/unit/coverage"
+coverageSkipTestFiles = true
+coverageThreshold = 1
+coveragePathIgnorePatterns = [
+	"test/**",
+	"dist/**",
+	"prisma/*.",
+	"generated/**",
+	"src/config/**",
+	"src/models/types/**",
+	"src/common/logger.ts"
+]
+preload = ["./test/setup.ts", "./test/context.ts"]
+
+[test.ci]
+smol = true
+timeout = 30000
+
+[test.reporter]
+junit = "test/unit/reports/junit.xml"

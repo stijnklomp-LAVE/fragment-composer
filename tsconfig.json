@@ -1,0 +1,64 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		// Bun baseline
+		"lib": ["ESNext"],
+		"target": "ESNext",
+		"module": "Preserve",
+		"moduleDetection": "force",
+		"allowJs": true,
+
+		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true,
+		"noEmit": true,
+
+		// Strict
+		"strict": true,
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"forceConsistentCasingInFileNames": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"exactOptionalPropertyTypes": true,
+
+		// Backend
+		"types": ["bun", "node"],
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+
+		// Aliases
+		"paths": {
+			"@/common/*": ["./src/common/*"],
+			"@/config/*": ["./src/config/*"],
+			"@/controllers/*": ["./src/controllers/*"],
+			"@/infrastructure/*": ["./src/infrastructure/*"],
+			"@/middleware/*": ["./src/middleware/*"],
+			"@/models/*": ["./src/models/*"],
+			"@/prismaClient": ["./generated/prisma/client.ts"],
+			"@/repositories/*": ["./src/repositories/*"],
+			"@/routes/*": ["./src/routes/*"],
+			"@/serializers/*": ["./src/models/serializers/*"],
+			"@/services/*": ["./src/services/*"],
+			"@/src/*": ["./src/*"],
+			"@/types/*": ["./src/models/types/*"],
+			"@/validators/*": ["./src/models/schemas/*"],
+
+			// Tests only
+			"@/context": ["./test/context.ts"],
+			"@/utils/*": ["./test/utils/*"]
+		}
+	},
+	"include": ["src/**/*.ts", "generated/**/*.ts"],
+	"exclude": [
+		"node_modules",
+		".husky",
+		"dist",
+		"test",
+		"typedoc.config.js",
+		"prisma.config.ts"
+	]
+}
