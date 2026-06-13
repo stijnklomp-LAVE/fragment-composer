@@ -1,18 +1,29 @@
-# Fastify template
+# Fragment Composer
 
-<p align="center">This project template serves as a starting point for building efficient and scalable server-side applications with <a href="https://fastify.dev/" target="_blank">Fastify</a>, <a href="https://www.typescriptlang.org/" target="_blank">TypeScript</a>, and best practices in place. It comes pre-configured with essential tools to ensure code quality, maintainability, and a streamlined development workflow.</p>
-<p align="center">
-<img src="https://img.shields.io/github/license/stijnklomp/fastify-template?style=flat" alt="Package License" />
-</p>
+<p align="center">Microservice for fragment collection, validation, and render job dispatch in the Location-Agnostic Video Editor.</p>
 
-## Features
+## Overview
 
-- Fastify: A fast and low overhead web framework for Node.js.
-- TypeScript: Static typing with TypeScript, enhancing code quality and developer productivity.
-- Prettier & ESLint: Automatic code formatting and linting for consistent code style and adherence to best practices.
-- Bun: Runtime environment, bundler and unit, feature, and acceptance tests.
-- Husky: Git hooks for running linting and tests before commits, ensuring code quality standards are met.
-- TypeDoc: Automatic generation of TypeScript documentation for improved code clarity and collaboration.
+The Fragment Composer is the orchestrator of the video rendering pipeline. It manages project metadata, collects video fragments from distributed source nodes, reconciles them into a validated render manifest, and dispatches the manifest to a render engine.
+
+```
+Collect fragments → Validate → Reconcile → Dispatch manifest → Render Engine
+```
+
+## Responsibilities
+
+- **Project & Segment API** — CRUD for projects and their video segments.
+- **Fragment Collection** — Copies fragments from source nodes (local, NAS, cloud) into a staging area.
+- **Reconciliation** — Validates completeness, checks file integrity, normalizes formats, and produces a render manifest.
+- **Dispatch** — Sends the manifest to a render engine via HTTP and tracks job progress.
+
+## Built with
+
+- [Fastify](https://fastify.dev/) — High-performance Node.js web framework
+- [TypeScript](https://www.typescriptlang.org/) — Static typing
+- [Prisma](https://www.prisma.io/) — Database ORM (PostgreSQL)
+- [RabbitMQ](https://www.rabbitmq.com/) — Message queue
+- [Bun](https://bun.sh/) — Runtime and test runner
 
 ## Installation
 
@@ -24,17 +35,17 @@ bun run prisma:generate
 ## Running the app
 
 ```sh
-# Development in watch mode
+# Development
 bun run dev
 
-# Production mode
+# Production
 bun run build && bun run start
 ```
 
 ### With Docker
 
 ```sh
-docker build -t fastify-template . && docker run --rm fastify-template
+docker build -t fragment-composer . && docker run --rm fragment-composer
 ```
 
 ### With Docker Compose
@@ -128,4 +139,4 @@ bun run integrity
 
 ## License
 
-This project is licensed under the MIT License. Feel free to customize and use it for your own projects.
+FSL-1.1-MIT

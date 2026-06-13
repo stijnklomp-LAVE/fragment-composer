@@ -47,7 +47,7 @@ API_PORT=3000
 NODE_ENV=development
 
 # Database (PostgreSQL)
-DATABASE_URL="postgresql://dev:admin123@localhost:5432/fastify?schema=template"
+DATABASE_URL="postgresql://dev:admin123@localhost:5432/fragment-composer?schema=public"
 
 # Cache (Redis)
 CACHE_DISABLED=true # Set to false to enable Redis

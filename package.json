@@ -1,8 +1,8 @@
 {
-	"name": "fastify-template",
+	"name": "fragment-composer",
 	"version": "1.0.0",
 	"private": false,
-	"description": "",
+	"description": "Microservice for fragment collection, validation, and render job dispatch",
 	"license": "MIT",
 	"type": "module",
 	"main": "dist/app.js",

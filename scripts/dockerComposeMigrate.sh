@@ -1,7 +1,7 @@
 #!/bin/sh
 DB_PORT="${DATABASE_PORT:-5432}"
 
-export DATABASE_URL="postgresql://$DATABASE_USERNAME:$DATABASE_PASSWORD@db:$DATABASE_PORT/$DATABASE_DB?schema=template"
+export DATABASE_URL="postgresql://$DATABASE_USERNAME:$DATABASE_PASSWORD@db:$DATABASE_PORT/$DATABASE_DB?schema=public"
 
 # Install dependencies if node_modules is missing
 if [ ! -d node_modules ]; then

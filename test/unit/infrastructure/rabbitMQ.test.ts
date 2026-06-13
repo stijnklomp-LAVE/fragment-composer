@@ -67,12 +67,12 @@ const queueDetails = {
 describe("RabbitMQ service", () => {
 	const channel = "channelA"
 	const exchange = "exchangeA"
-	const routingKey = "fastifyTemplate.unitTest.A"
+	const routingKey = "fragmentComposer.unitTest.A"
 	const message = "Message A published"
 	const queue = "queueA"
 	const bindings = {
 		[exchange]: routingKey,
-		exchangeB: "fastifyTemplate.unitTest.B",
+		exchangeB: "fragmentComposer.unitTest.B",
 	}
 
 	beforeEach(() => {
@@ -593,7 +593,7 @@ describe("RabbitMQ service", () => {
 					2,
 					queue,
 					"exchangeB",
-					"fastifyTemplate.unitTest.B",
+					"fragmentComposer.unitTest.B",
 				)
 				expect(logger.info).toHaveBeenCalledWith(
 					`Started consuming RabbitMQ messages on queue '${queue}'`,
@@ -673,7 +673,7 @@ describe("RabbitMQ service", () => {
 				expect(logger.error).toHaveBeenCalledTimes(1)
 				expect(logger.error).toHaveBeenCalledWith({
 					err: error,
-					msg: `Failed to bind 'fastifyTemplate.unitTest.B' to RabbitMQ exchange 'exchangeB' for queue '${queue}'`,
+					msg: `Failed to bind 'fragmentComposer.unitTest.B' to RabbitMQ exchange 'exchangeB' for queue '${queue}'`,
 				})
 				expect(mockChannelConsume).toHaveBeenCalled()
 			})

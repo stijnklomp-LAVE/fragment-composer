@@ -16,13 +16,13 @@ x-acceptance: &acceptance
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
-    DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
   env_file:
     - path: .env.development
   ports:
     - 3001:3001
 
-x-fastify: &fastify
+x-fragment-composer: &fragment-composer
   tty: true
   # healthcheck:
   #   test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
@@ -46,7 +46,7 @@ x-fastify: &fastify
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
-    DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
   env_file:
     - path: .env.development
   ports:
@@ -54,7 +54,7 @@ x-fastify: &fastify
 
 services:
   local:
-    <<: *fastify
+    <<: *fragment-composer
     build:
       context: .
     profiles:
@@ -62,7 +62,7 @@ services:
       - test
 
   dev:
-    <<: *fastify
+    <<: *fragment-composer
     image: oven/bun:alpine
     volumes:
       - .:/src
@@ -157,10 +157,10 @@ services:
       timeout: 5s
       retries: 6
     environment:
-      DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
       POSTGRES_USER: ${DATABASE_USERNAME:-dev}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-admin123}
-      POSTGRES_DB: ${DATABASE_DB:-fastify}
+      POSTGRES_DB: ${DATABASE_DB:-fragment-composer}
     env_file:
       - path: .env.development
     ports:
@@ -179,7 +179,7 @@ services:
     ports:
       - 3001:3001
     environment:
-      DATABASE_URL: "postgresql://dev:admin123@db:5432/fastify?schema=template"
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
     env_file:
       - path: .env.development
     profiles:
