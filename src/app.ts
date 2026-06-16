@@ -16,7 +16,7 @@ const main = async () => {
 	} else {
 		const api = (await import("@/api/app")) as ApiModule
 		await api.start({ writeOpenapi: loggerEnv !== "production" })
-	}
+	} // TODO: Exit the app when no mode is specified
 }
 
 if (loggerEnv !== "test") void main()

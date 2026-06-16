@@ -4,15 +4,6 @@ x-acceptance: &acceptance
     - .:/src
   working_dir: /src
   tty: true
-  depends_on:
-    rabbitmq:
-      condition: service_healthy
-    cache:
-      condition: service_started
-    db-migration:
-      condition: service_completed_successfully
-    # localstack:
-    #   condition: service_started
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
@@ -22,27 +13,8 @@ x-acceptance: &acceptance
   ports:
     - 3001:3001
 
-x-fragment-composer: &fragment-composer
+x-fragment-composer-base: &fragment-composer-base
   tty: true
-  # healthcheck:
-  #   test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
-  #   interval: 30s
-  #   timeout: 5s
-  #   retries: 4
-  depends_on:
-    rabbitmq:
-      condition: service_healthy
-    cache:
-      condition: service_started
-    db-migration:
-      condition: service_completed_successfully
-    # localstack:
-    #   condition: service_started
-    # otel-collector:
-    #   condition: service_healthy
-  networks:
-    - default
-    # - elastic
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
@@ -52,88 +24,26 @@ x-fragment-composer: &fragment-composer
   ports:
     - ${API_PORT:-3000}:3000
 
+x-fragment-composer-dev: &fragment-composer-dev
+  <<: *fragment-composer-base
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+    cache:
+      condition: service_started
+    db-migration:
+      condition: service_completed_successfully
+  networks:
+    - default
+
+x-fragment-composer-shared: &fragment-composer-shared
+  <<: *fragment-composer-base
+  networks:
+    - platform
+
 services:
-  local:
-    <<: *fragment-composer
-    build:
-      context: .
-    profiles:
-      - local
-      - test
-
-  worker-local:
-    <<: *fragment-composer
-    build:
-      context: .
-    environment:
-      DEPLOYMENT_MODE: worker
-    profiles:
-      - local
-      - test
-
-  dev:
-    <<: *fragment-composer
-    image: oven/bun:alpine
-    volumes:
-      - .:/src
-    working_dir: /src
-    command: |
-      sh -c "
-        if [ ! -d node_modules ]; then
-          bun install --frozen-lockfile --ignore-scripts
-        fi
-        bun run prisma:generate
-        bun run dev
-      "
-    profiles:
-      - dev
-
-  worker:
-    <<: *fragment-composer
-    image: oven/bun:alpine
-    volumes:
-      - .:/src
-    working_dir: /src
-    environment:
-      DEPLOYMENT_MODE: worker
-    command: |
-      sh -c "
-        if [ ! -d node_modules ]; then
-          bun install --frozen-lockfile --ignore-scripts
-        fi
-        bun run prisma:generate
-        bun run dev
-      "
-    profiles:
-      - dev
-
-  acceptance:
-    <<: *acceptance
-    command: |
-      sh -c "
-        if [ ! -d node_modules ]; then
-          bun install --frozen-lockfile --ignore-scripts
-        fi
-        sleep infinity
-      "
-    profiles:
-      - local
-      - dev
-
-  acceptance-once:
-    <<: *acceptance
-    command: |
-      sh -c "
-        if [ ! -d node_modules ]; then
-          bun install --frozen-lockfile --ignore-scripts
-        fi
-        bun run test:acceptance
-      "
-    profiles:
-      - test
-
   rabbitmq:
-    image: rabbitmq
+    image: rabbitmq:3-management
     restart: always
     healthcheck:
       test: rabbitmq-diagnostics -q ping
@@ -151,6 +61,7 @@ services:
     ports:
       - ${RABBIT_PORT:-5672}:5672
       - 15672:15672
+    profiles: [dev, local]
 
   cache:
     image: valkey/valkey
@@ -166,18 +77,12 @@ services:
       - path: .env.development
     ports:
       - ${CACHE_PORT:-6379}:6379
+    profiles: [dev, local]
 
   db:
     image: postgres:latest
     restart: always
-    # set shared memory limit when using docker-compose
     shm_size: 128mb
-    # or set shared memory limit when deploying via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -194,19 +99,23 @@ services:
       - path: .env.development
     ports:
       - ${DATABASE_PORT:-5432}:5432
+    profiles: [dev, local]
 
   db-migration:
     image: oven/bun:alpine
     volumes:
       - .:/src
     working_dir: /src
-    command: sh ./scripts/dockerComposeMigrate.sh
+    command: |
+      sh -c "
+        echo 'Running db migration...'
+        export DATABASE_URL='postgresql://dev:admin123@db:5432/fragment-composer?schema=public'
+        bunx prisma migrate deploy
+      "
     depends_on:
       db:
         condition: service_healthy
     tty: true
-    ports:
-      - 3001:3001
     environment:
       DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
     env_file:
@@ -216,37 +125,146 @@ services:
       - dev
       - test
 
-  # localstack:
-  #   image: localstack/localstack
-  #   ports:
-  #     - "127.0.0.1:4566:4566" # LocalStack gateway
-  #     - "127.0.0.1:4510-4559:4510-4559" # External services port range
-  #   environment:
-  #     # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-  #     - DEBUG=${DEBUG:-0}
-  #   volumes:
-  #     - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-  #     - "/var/run/docker.sock:/var/run/docker.sock"
-  #   profiles:
-  #     - local
-  #     - dev
-  #     - test
+  local:
+    <<: *fragment-composer-dev
+    build:
+      context: .
+    profiles:
+      - local
+      - test
 
-  # otel-collector:
-  #   image: otel/opentelemetry-collector-contrib
-  #   volumes:
-  #     - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-  #   ports:
-  #     - 1888:1888 # pprof extension
-  #     - 8888:8888 # Prometheus metrics exposed by the Collector
-  #     - 8889:8889 # Prometheus exporter metrics
-  #     - 13133:13133 # health_check extension
-  #     - 4317:4317 # OTLP gRPC receiver
-  #     - 4318:4318 # OTLP http receiver
-  #     - 55679:55679 # zpages extension
-  #   profiles:
-  #     - local
-  #     - dev
+  worker-local:
+    <<: *fragment-composer-dev
+    build:
+      context: .
+    environment:
+      DEPLOYMENT_MODE: worker
+    profiles:
+      - local
+      - test
+
+  dev:
+    <<: *fragment-composer-dev
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        bun run prisma:generate
+        bun run dev
+      "
+    profiles:
+      - dev
+
+  worker:
+    <<: *fragment-composer-dev
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    ports: []
+    environment:
+      DEPLOYMENT_MODE: worker
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        bun run prisma:generate
+        bun run dev
+      "
+    profiles:
+      - dev
+
+  shared:
+    <<: *fragment-composer-shared
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        echo 'Waiting for dependencies...'
+        until nc -z rabbitmq 5672 2>/dev/null; do echo 'Waiting for rabbitmq:5672...'; sleep 1; done
+        until nc -z cache 6379 2>/dev/null; do echo 'Waiting for cache:6379...'; sleep 1; done
+        until nc -z db 5432 2>/dev/null; do echo 'Waiting for db:5432...'; sleep 1; done
+        echo 'All dependencies available, starting...'
+        bun run prisma:generate
+        bun run dev
+      "
+    profiles:
+      - shared
+
+  worker-shared:
+    <<: *fragment-composer-shared
+    image: oven/bun:alpine
+    volumes:
+      - .:/src
+    working_dir: /src
+    ports: []
+    environment:
+      DEPLOYMENT_MODE: worker
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        echo 'Waiting for dependencies...'
+        until nc -z rabbitmq 5672 2>/dev/null; do echo 'Waiting for rabbitmq:5672...'; sleep 1; done
+        until nc -z cache 6379 2>/dev/null; do echo 'Waiting for cache:6379...'; sleep 1; done
+        until nc -z db 5432 2>/dev/null; do echo 'Waiting for db:5432...'; sleep 1; done
+        echo 'All dependencies available, starting...'
+        bun run prisma:generate
+        bun run dev
+      "
+    profiles:
+      - shared
+
+  acceptance:
+    <<: *acceptance
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      db-migration:
+        condition: service_completed_successfully
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        sleep infinity
+      "
+    profiles:
+      - local
+      - dev
+
+  acceptance-once:
+    <<: *acceptance
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      db-migration:
+        condition: service_completed_successfully
+    command: |
+      sh -c "
+        if [ ! -d node_modules ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        fi
+        bun run test:acceptance
+      "
+    profiles:
+      - test
 
 volumes:
   rabbitmq:
@@ -254,5 +272,6 @@ volumes:
   postgres-data:
 
 networks:
-  cache:
-  # elastic:
+  platform:
+    external: true
+    name: platform

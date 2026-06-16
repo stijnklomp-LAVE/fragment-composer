@@ -49,13 +49,13 @@ bun run build && DEPLOYMENT_MODE=worker bun run start # Worker
 ### With Docker
 
 ```sh
-docker build -t fastify-template .
+docker build -t fragment-composer .
 
 # API
-docker run --rm fastify-template
+docker run --rm fragment-composer
 
 # Worker
-docker run --rm -e DEPLOYMENT_MODE=worker fastify-template
+docker run --rm -e DEPLOYMENT_MODE=worker fragment-composer
 ```
 
 ### With Docker Compose
