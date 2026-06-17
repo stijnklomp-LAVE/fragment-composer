@@ -186,6 +186,9 @@ services:
     volumes:
       - .:/src
     working_dir: /src
+    environment:
+      RABBIT_DISABLED: "false"
+      CACHE_DISABLED: "false"
     command: |
       sh -c "
         if [ ! -d node_modules ]; then
@@ -211,6 +214,8 @@ services:
     ports: []
     environment:
       DEPLOYMENT_MODE: worker
+      RABBIT_DISABLED: "false"
+      CACHE_DISABLED: "false"
     command: |
       sh -c "
         if [ ! -d node_modules ]; then

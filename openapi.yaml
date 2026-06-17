@@ -166,7 +166,7 @@ paths:
                 $ref: "#/components/schemas/def-0"
 servers:
   - description: Development server
-    url: http://localhost:3000
+    url: http://localhost:3001
 tags:
   - description: User related end-points
     name: user
