@@ -74,7 +74,7 @@ All tests get a mocked logger automatically. Use `loggerMocks` to assert log cal
 ```typescript
 import { loggerMocks } from "test/setup"
 
-expect(loggerMocks.info).toHaveBeenCalledWith("Server listening on port 3000")
+expect(loggerMocks.info).toHaveBeenCalledWith("Server listening on port 3001")
 expect(loggerMocks.error).toHaveBeenCalledWith(expect.any(Error))
 ```
 

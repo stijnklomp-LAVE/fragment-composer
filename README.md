@@ -84,6 +84,20 @@ You may need to run `bunx --bun prisma migrate dev --name init` in your terminal
 
 A RabbitMQ service is available via Docker Compose for message queue capabilities. The management UI is accessible at `http://localhost:15672`.
 
+## Logging
+
+Two environment variables control log verbosity independently:
+
+- `REQUEST_LOG_LEVEL` — HTTP request logs from Fastify (every endpoint hit). Default: `info`.
+- `CUSTOM_LOG_LEVEL`  — High-level event logs. Default: `info`.
+
+Set either to `debug` for more verbosity:
+
+```sh
+REQUEST_LOG_LEVEL=info bun run dev # Show all endpoint hits
+CUSTOM_LOG_LEVEL=debug bun run dev # Show debug-level custom events
+```
+
 ## Test
 
 ### Lint

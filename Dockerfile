@@ -13,7 +13,7 @@ RUN bun run prisma:generate
 RUN bun run build
 
 FROM oven/bun:latest AS runner
-ARG API_PORT=3000
+ARG API_PORT=3001
 ENV API_PORT=${API_PORT}
 WORKDIR /app
 

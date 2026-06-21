@@ -10,7 +10,7 @@ import { registerRoutes } from "@/routes/index"
 import { cacheClient } from "@/infrastructure/cache"
 import { queueClient } from "@/infrastructure/rabbitMQ"
 
-const port = Number(process.env.API_PORT ?? 3000)
+const port = Number(process.env.API_PORT ?? 3001)
 const genReqId = hyperid({ fixedLength: true, urlSafe: true })
 const buildApp = (
 	fastifyOptions: FastifyServerOptions = {

@@ -36,10 +36,10 @@ describe("server", () => {
 		expect(mockQueueClient).toHaveBeenCalled()
 		expect(listenMock).toHaveBeenCalledWith({
 			host: "0.0.0.0",
-			port: 3000,
+			port: 3001,
 		})
 		expect(loggerMocks.info).toHaveBeenCalledWith(
-			"Server listening on port 3000",
+			"Server listening on port 3001",
 		)
 
 		await app.close()
@@ -53,7 +53,7 @@ describe("server", () => {
 
 		expect(listenMock).toHaveBeenCalledWith({
 			host: "0.0.0.0",
-			port: 3000,
+			port: 3001,
 		})
 		expect(writeFileSyncMock).toHaveBeenCalled()
 		const args = writeFileSyncMock.mock.calls[0] as unknown[]
@@ -80,7 +80,7 @@ describe("server", () => {
 		expect(mockQueueClient).toHaveBeenCalled()
 		expect(listenMock).toHaveBeenCalledWith({
 			host: "0.0.0.0",
-			port: 3000,
+			port: 3001,
 		})
 		expect(writeFileSyncMock).not.toHaveBeenCalled()
 

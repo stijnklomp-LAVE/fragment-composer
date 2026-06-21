@@ -7,7 +7,7 @@ x-acceptance: &acceptance
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
-    DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
   env_file:
     - path: .env.development
   ports:
@@ -18,11 +18,11 @@ x-fragment-composer-base: &fragment-composer-base
   environment:
     CACHE_HOST: cache
     RABBIT_HOST: rabbitmq
-    DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
+    DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
   env_file:
     - path: .env.development
   ports:
-    - ${API_PORT:-3000}:3000
+    - ${API_PORT:-3001}:3001
 
 x-fragment-composer-dev: &fragment-composer-dev
   <<: *fragment-composer-base
@@ -39,7 +39,9 @@ x-fragment-composer-dev: &fragment-composer-dev
 x-fragment-composer-shared: &fragment-composer-shared
   <<: *fragment-composer-base
   networks:
-    - platform
+    platform:
+      aliases:
+        - fragment-composer
 
 services:
   rabbitmq:
@@ -91,10 +93,10 @@ services:
       timeout: 5s
       retries: 6
     environment:
-      DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
       POSTGRES_USER: ${DATABASE_USERNAME:-dev}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-admin123}
-      POSTGRES_DB: ${DATABASE_DB:-fragment-composer}
+      POSTGRES_DB: ${DATABASE_DB:-video-editor}
     env_file:
       - path: .env.development
     ports:
@@ -109,7 +111,7 @@ services:
     command: |
       sh -c "
         echo 'Running db migration...'
-        export DATABASE_URL='postgresql://dev:admin123@db:5432/fragment-composer?schema=public'
+        export DATABASE_URL='postgresql://dev:admin123@db:5432/video-editor?schema=public'
         bunx prisma migrate deploy
       "
     depends_on:
@@ -117,7 +119,7 @@ services:
         condition: service_healthy
     tty: true
     environment:
-      DATABASE_URL: "postgresql://dev:admin123@db:5432/fragment-composer?schema=public"
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
     env_file:
       - path: .env.development
     profiles:
@@ -129,6 +131,8 @@ services:
     <<: *fragment-composer-dev
     build:
       context: .
+    environment:
+      DEPLOYMENT_MODE: api
     profiles:
       - local
       - test
@@ -149,12 +153,15 @@ services:
     volumes:
       - .:/src
     working_dir: /src
+    environment:
+      DEPLOYMENT_MODE: api
     command: |
       sh -c "
         if [ ! -d node_modules ]; then
           bun install --frozen-lockfile --ignore-scripts
         fi
         bun run prisma:generate
+        bun run migrate
         bun run dev
       "
     profiles:
@@ -175,6 +182,7 @@ services:
           bun install --frozen-lockfile --ignore-scripts
         fi
         bun run prisma:generate
+        bun run migrate
         bun run dev
       "
     profiles:
@@ -187,6 +195,8 @@ services:
       - .:/src
     working_dir: /src
     environment:
+      DEPLOYMENT_MODE: api
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
       RABBIT_DISABLED: "false"
       CACHE_DISABLED: "false"
     command: |
@@ -200,6 +210,7 @@ services:
         until nc -z db 5432 2>/dev/null; do echo 'Waiting for db:5432...'; sleep 1; done
         echo 'All dependencies available, starting...'
         bun run prisma:generate
+        bun run migrate
         bun run dev
       "
     profiles:
@@ -214,6 +225,7 @@ services:
     ports: []
     environment:
       DEPLOYMENT_MODE: worker
+      DATABASE_URL: "postgresql://dev:admin123@db:5432/video-editor?schema=public"
       RABBIT_DISABLED: "false"
       CACHE_DISABLED: "false"
     command: |
@@ -227,6 +239,7 @@ services:
         until nc -z db 5432 2>/dev/null; do echo 'Waiting for db:5432...'; sleep 1; done
         echo 'All dependencies available, starting...'
         bun run prisma:generate
+        bun run migrate
         bun run dev
       "
     profiles:
@@ -241,6 +254,8 @@ services:
         condition: service_started
       db-migration:
         condition: service_completed_successfully
+    environment:
+      DEPLOYMENT_MODE: api
     command: |
       sh -c "
         if [ ! -d node_modules ]; then
@@ -261,6 +276,8 @@ services:
         condition: service_started
       db-migration:
         condition: service_completed_successfully
+    environment:
+      DEPLOYMENT_MODE: api
     command: |
       sh -c "
         if [ ! -d node_modules ]; then

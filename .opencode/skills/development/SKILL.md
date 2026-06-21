@@ -43,7 +43,7 @@ Key environment variables:
 
 ```bash
 # App
-API_PORT=3000
+API_PORT=3001
 NODE_ENV=development
 
 # Database (PostgreSQL)
@@ -63,8 +63,8 @@ RABBIT_USER=guest
 RABBIT_PASSWORD=guest
 
 # Logs
-LOGS=development # development | production | test
-LOG_LEVEL=info
+REQUEST_LOG_LEVEL=warn
+CUSTOM_LOG_LEVEL=info
 ```
 
 ## Development Commands

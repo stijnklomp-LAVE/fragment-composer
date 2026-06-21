@@ -63,6 +63,12 @@ export const createCacheClient = () => {
 	/**
 	 * @remarks Throws if the cache client is not initialized.
 	 */
+	const setWithTTL = async (key: string, value: string, ttlSeconds: number) =>
+		getClient().set(key, value, { ex: ttlSeconds })
+
+	/**
+	 * @remarks Throws if the cache client is not initialized.
+	 */
 	const del = async (key: string) => getClient().del(key)
 
 	return {
@@ -70,6 +76,7 @@ export const createCacheClient = () => {
 		get,
 		init,
 		set,
+		setWithTTL,
 	}
 }
 

@@ -6,11 +6,13 @@ import { fileURLToPath } from "node:url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const finalConfig = config({
+const baseConfig = await config({
 	strict: true,
 	tsconfigRootDir: __dirname,
 	typescript: true,
 })
+
+const finalConfig = [...baseConfig]
 
 const addedConfigs = [
 	{
@@ -40,6 +42,15 @@ const addedConfigs = [
 					format: null,
 					filter: {
 						regex: "^[0-9]+$",
+						match: true,
+					},
+				},
+				{
+					// Prisma operators (OR, AND, NOT, in, etc.)
+					selector: "objectLiteralProperty",
+					format: null,
+					filter: {
+						regex: "^(OR|AND|NOT|in|notIn|contains|startsWith|endsWith)$",
 						match: true,
 					},
 				},

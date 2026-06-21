@@ -39,20 +39,134 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/def-0"
-  /v1/notes:
+  /v1/devices:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceName
+              properties:
+                deviceName:
+                  maxLength: 100
+                  minLength: 1
+                  type: string
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - device
+                  - message
+                properties:
+                  device:
+                    type: object
+                    allOf:
+                      - type: object
+                        required:
+                          - deviceName
+                        properties:
+                          deviceName:
+                            maxLength: 100
+                            minLength: 1
+                            type: string
+                      - type: object
+                        required:
+                          - createdAt
+                          - deviceId
+                          - updatedAt
+                        properties:
+                          createdAt:
+                            format: date-time
+                            type: string
+                          deviceId:
+                            type: string
+                          updatedAt:
+                            format: date-time
+                            type: string
+                  message:
+                    type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
     get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - devices
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      type: object
+                      allOf:
+                        - type: object
+                          required:
+                            - deviceName
+                          properties:
+                            deviceName:
+                              maxLength: 100
+                              minLength: 1
+                              type: string
+                        - type: object
+                          required:
+                            - createdAt
+                            - deviceId
+                            - updatedAt
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            deviceId:
+                              type: string
+                            updatedAt:
+                              format: date-time
+                              type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/devices/{deviceId}/heartbeat:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - online
+                    - type: string
+                      enum:
+                        - offline
       parameters:
         - schema:
-            minimum: 1
-            type: number
-          in: query
-          name: page
-          required: true
-        - schema:
-            maximum: 100
-            type: number
-          in: query
-          name: perPage
+            minLength: 1
+            type: string
+          in: path
+          name: deviceId
           required: true
       responses:
         "200":
@@ -62,38 +176,105 @@ paths:
               schema:
                 type: object
                 required:
-                  - notes
+                  - message
                 properties:
-                  notes:
+                  message:
+                    type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/devices/status:
+    get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - devices
+                properties:
+                  devices:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      required:
+                        - lastContact
+                        - state
+                        - status
+                      properties:
+                        lastContact:
+                          format: date-time
+                          type: string
+                        state:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - online
+                            - type: string
+                              enum:
+                                - offline
+                            - type: string
+                              enum:
+                                - stale
+                        status:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - online
+                            - type: string
+                              enum:
+                                - offline
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects:
+    get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - projects
+                properties:
+                  projects:
                     type: array
                     items:
                       type: object
-                      allOf:
-                        - type: object
-                          required:
-                            - note
-                            - owner
-                          properties:
-                            note:
-                              maxLength: 300
-                              type: string
-                            owner:
-                              maxLength: 100
-                              type: string
-                        - type: object
-                          required:
-                            - createdAt
-                            - id
-                            - updatedAt
-                          properties:
-                            createdAt:
-                              format: date-time
-                              type: string
-                            id:
-                              type: number
-                            updatedAt:
-                              format: date-time
-                              type: string
+                      required:
+                        - createdAt
+                        - description
+                        - fragmentCount
+                        - id
+                        - name
+                        - updatedAt
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        description:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        fragmentCount:
+                          type: number
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        updatedAt:
+                          format: date-time
+                          type: string
         "500":
           description: Default Response
           content:
@@ -108,14 +289,14 @@ paths:
             schema:
               type: object
               required:
-                - note
-                - owner
+                - name
               properties:
-                note:
-                  maxLength: 300
+                description:
+                  maxLength: 500
                   type: string
-                owner:
-                  maxLength: 100
+                name:
+                  maxLength: 200
+                  minLength: 1
                   type: string
       responses:
         "201":
@@ -125,39 +306,1132 @@ paths:
               schema:
                 type: object
                 required:
+                  - project
+                properties:
+                  project:
+                    type: object
+                    required:
+                      - createdAt
+                      - description
+                      - fragmentCount
+                      - id
+                      - name
+                      - updatedAt
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      description:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      fragmentCount:
+                        type: number
+                      fragments:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - createdAt
+                            - filePath
+                            - id
+                            - name
+                            - size
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            duration:
+                              type: number
+                            filePath:
+                              type: string
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            size:
+                              type: number
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      updatedAt:
+                        format: date-time
+                        type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/with-fragments:
+    get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - projects
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - createdAt
+                        - description
+                        - fragmentCount
+                        - id
+                        - name
+                        - updatedAt
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        description:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        fragmentCount:
+                          type: number
+                        fragments:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - createdAt
+                              - filePath
+                              - id
+                              - name
+                              - size
+                            properties:
+                              createdAt:
+                                format: date-time
+                                type: string
+                              duration:
+                                type: number
+                              filePath:
+                                type: string
+                              id:
+                                type: string
+                              name:
+                                type: string
+                              size:
+                                type: number
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        updatedAt:
+                          format: date-time
+                          type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - project
+                properties:
+                  project:
+                    type: object
+                    required:
+                      - createdAt
+                      - description
+                      - fragmentCount
+                      - id
+                      - name
+                      - updatedAt
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      description:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      fragmentCount:
+                        type: number
+                      fragments:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - createdAt
+                            - filePath
+                            - id
+                            - name
+                            - size
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            duration:
+                              type: number
+                            filePath:
+                              type: string
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            size:
+                              type: number
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      updatedAt:
+                        format: date-time
+                        type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  anyOf:
+                    - maxLength: 500
+                      type: string
+                    - type: "null"
+                name:
+                  maxLength: 200
+                  minLength: 1
+                  type: string
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - project
+                properties:
+                  project:
+                    type: object
+                    required:
+                      - createdAt
+                      - description
+                      - fragmentCount
+                      - id
+                      - name
+                      - updatedAt
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      description:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      fragmentCount:
+                        type: number
+                      fragments:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - createdAt
+                            - filePath
+                            - id
+                            - name
+                            - size
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            duration:
+                              type: number
+                            filePath:
+                              type: string
+                            id:
+                              type: string
+                            name:
+                              type: string
+                            size:
+                              type: number
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      updatedAt:
+                        format: date-time
+                        type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    delete:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
                   - message
-                  - note
                 properties:
                   message:
                     type: string
-                  note:
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/transfer-requests:
+    get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - requests
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - createdAt
+                        - direction
+                        - expiresAt
+                        - fragmentIds
+                        - fragmentNames
+                        - id
+                        - message
+                        - participants
+                        - projectId
+                        - projectName
+                        - status
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        direction:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - SEND
+                            - type: string
+                              enum:
+                                - RECEIVE
+                        expiresAt:
+                          format: date-time
+                          type: string
+                        fragmentIds:
+                          type: array
+                          items:
+                            type: string
+                        fragmentNames:
+                          type: array
+                          items:
+                            type: string
+                        id:
+                          type: string
+                        message:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        participants:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - deviceId
+                              - deviceName
+                              - role
+                              - status
+                            properties:
+                              deviceId:
+                                type: string
+                              deviceName:
+                                type: string
+                              role:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - SOURCE
+                                  - type: string
+                                    enum:
+                                      - TARGET
+                              status:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - PENDING
+                                  - type: string
+                                    enum:
+                                      - ACCEPTED
+                                  - type: string
+                                    enum:
+                                      - REJECTED
+                                  - type: string
+                                    enum:
+                                      - CANCELLED
+                                  - type: string
+                                    enum:
+                                      - COMPLETED
+                        projectId:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        projectName:
+                          anyOf:
+                            - type: string
+                            - type: "null"
+                        status:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - PENDING
+                            - type: string
+                              enum:
+                                - ACTIVE
+                            - type: string
+                              enum:
+                                - COMPLETED
+                            - type: string
+                              enum:
+                                - DELETED
+                            - type: string
+                              enum:
+                                - EXPIRED
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - direction
+                - sourceDeviceIds
+                - targetDeviceIds
+              properties:
+                direction:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - SEND
+                    - type: string
+                      enum:
+                        - RECEIVE
+                fragmentIds:
+                  type: array
+                  items:
+                    type: string
+                fragmentNames:
+                  type: array
+                  items:
+                    type: string
+                message:
+                  type: string
+                projectId:
+                  type: string
+                projectName:
+                  type: string
+                sourceDeviceIds:
+                  type: array
+                  items:
+                    minLength: 1
+                    type: string
+                targetDeviceIds:
+                  type: array
+                  items:
+                    minLength: 1
+                    type: string
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - request
+                properties:
+                  request:
                     type: object
-                    allOf:
-                      - type: object
-                        required:
-                          - note
-                          - owner
-                        properties:
-                          note:
-                            maxLength: 300
-                            type: string
-                          owner:
-                            maxLength: 100
-                            type: string
-                      - type: object
-                        required:
-                          - createdAt
-                          - id
-                          - updatedAt
-                        properties:
-                          createdAt:
-                            format: date-time
-                            type: string
-                          id:
-                            type: number
-                          updatedAt:
-                            format: date-time
-                            type: string
+                    required:
+                      - createdAt
+                      - direction
+                      - expiresAt
+                      - fragmentIds
+                      - fragmentNames
+                      - id
+                      - message
+                      - participants
+                      - projectId
+                      - projectName
+                      - status
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      direction:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - SEND
+                          - type: string
+                            enum:
+                              - RECEIVE
+                      expiresAt:
+                        format: date-time
+                        type: string
+                      fragmentIds:
+                        type: array
+                        items:
+                          type: string
+                      fragmentNames:
+                        type: array
+                        items:
+                          type: string
+                      id:
+                        type: string
+                      message:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      participants:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - deviceId
+                            - deviceName
+                            - role
+                            - status
+                          properties:
+                            deviceId:
+                              type: string
+                            deviceName:
+                              type: string
+                            role:
+                              anyOf:
+                                - type: string
+                                  enum:
+                                    - SOURCE
+                                - type: string
+                                  enum:
+                                    - TARGET
+                            status:
+                              anyOf:
+                                - type: string
+                                  enum:
+                                    - PENDING
+                                - type: string
+                                  enum:
+                                    - ACCEPTED
+                                - type: string
+                                  enum:
+                                    - REJECTED
+                                - type: string
+                                  enum:
+                                    - CANCELLED
+                                - type: string
+                                  enum:
+                                    - COMPLETED
+                      projectId:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      projectName:
+                        anyOf:
+                          - type: string
+                          - type: "null"
+                      status:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - PENDING
+                          - type: string
+                            enum:
+                              - ACTIVE
+                          - type: string
+                            enum:
+                              - COMPLETED
+                          - type: string
+                            enum:
+                              - DELETED
+                          - type: string
+                            enum:
+                              - EXPIRED
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/transfer-requests/{id}/participants/{deviceId}/respond:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - accept
+                    - type: string
+                      enum:
+                        - reject
+      parameters:
+        - schema:
+            minLength: 1
+            type: string
+          in: path
+          name: deviceId
+          required: true
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - participant
+                properties:
+                  participant:
+                    type: object
+                    required:
+                      - deviceId
+                      - deviceName
+                      - role
+                      - status
+                    properties:
+                      deviceId:
+                        type: string
+                      deviceName:
+                        type: string
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - SOURCE
+                          - type: string
+                            enum:
+                              - TARGET
+                      status:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - PENDING
+                          - type: string
+                            enum:
+                              - ACCEPTED
+                          - type: string
+                            enum:
+                              - REJECTED
+                          - type: string
+                            enum:
+                              - CANCELLED
+                          - type: string
+                            enum:
+                              - COMPLETED
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/transfer-requests/{id}:
+    delete:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/transfer-requests/{id}/participants/{deviceId}/cancel:
+    put:
+      parameters:
+        - schema:
+            minLength: 1
+            type: string
+          in: path
+          name: deviceId
+          required: true
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - participant
+                properties:
+                  participant:
+                    type: object
+                    required:
+                      - deviceId
+                      - deviceName
+                      - role
+                      - status
+                    properties:
+                      deviceId:
+                        type: string
+                      deviceName:
+                        type: string
+                      role:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - SOURCE
+                          - type: string
+                            enum:
+                              - TARGET
+                      status:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - PENDING
+                          - type: string
+                            enum:
+                              - ACCEPTED
+                          - type: string
+                            enum:
+                              - REJECTED
+                          - type: string
+                            enum:
+                              - CANCELLED
+                          - type: string
+                            enum:
+                              - COMPLETED
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/signaling/offer:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sdp
+                - sourceDeviceId
+                - targetDeviceId
+              properties:
+                sdp:
+                  minLength: 1
+                  type: string
+                sourceDeviceId:
+                  minLength: 1
+                  type: string
+                targetDeviceId:
+                  minLength: 1
+                  type: string
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sessionId
+                properties:
+                  sessionId:
+                    format: uuid
+                    type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/signaling/pending:
+    get:
+      parameters:
+        - schema:
+            minLength: 1
+            type: string
+          in: query
+          name: deviceId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sessions
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - answer
+                        - offer
+                        - sessionId
+                        - sourceDeviceId
+                        - targetDeviceId
+                      properties:
+                        answer:
+                          anyOf:
+                            - minLength: 1
+                              type: string
+                            - type: "null"
+                        offer:
+                          anyOf:
+                            - minLength: 1
+                              type: string
+                            - type: "null"
+                        sessionId:
+                          format: uuid
+                          type: string
+                        sourceDeviceId:
+                          minLength: 1
+                          type: string
+                        targetDeviceId:
+                          minLength: 1
+                          type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/signaling/{sessionId}/answer:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sdp
+              properties:
+                sdp:
+                  minLength: 1
+                  type: string
+      parameters:
+        - schema:
+            format: uuid
+            type: string
+          in: path
+          name: sessionId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    get:
+      parameters:
+        - schema:
+            format: uuid
+            type: string
+          in: path
+          name: sessionId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - answer
+                properties:
+                  answer:
+                    minLength: 1
+                    type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/signaling/{sessionId}/ice:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - candidate
+                - fromDeviceId
+              properties:
+                candidate:
+                  type: string
+                fromDeviceId:
+                  minLength: 1
+                  type: string
+                sdpMLineIndex:
+                  type: number
+                sdpMid:
+                  type: string
+      parameters:
+        - schema:
+            format: uuid
+            type: string
+          in: path
+          name: sessionId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    get:
+      parameters:
+        - schema:
+            minLength: 1
+            type: string
+          in: query
+          name: fromDeviceId
+          required: true
+        - schema:
+            format: uuid
+            type: string
+          in: path
+          name: sessionId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - candidates
+                properties:
+                  candidates:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - candidate
+                        - fromDeviceId
+                      properties:
+                        candidate:
+                          type: string
+                        fromDeviceId:
+                          minLength: 1
+                          type: string
+                        sdpMLineIndex:
+                          type: number
+                        sdpMid:
+                          type: string
         "500":
           description: Default Response
           content:

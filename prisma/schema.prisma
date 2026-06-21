@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -11,15 +5,121 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas = ["public"]
+  schemas  = ["public"]
 }
 
-model note {
-  id        Int      @id @default(autoincrement())
-  owner     String
-  note      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// Minimal User model — only id is needed for FK reference.
+/// In shared-db mode, the full User table is created by client migrations.
+model User {
+  id            String    @id @default(cuid())
+
+  devices       Device[]
+  videoProjects VideoProject[]
+
+  @@schema("public")
+}
+
+model Device {
+  deviceId   String   @id @default(cuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  deviceName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  participants TransferRequestParticipant[]
+
+  @@schema("public")
+}
+
+model VideoProject {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  fragments   Fragment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("public")
+}
+
+model Fragment {
+  id        String   @id @default(cuid())
+  name      String
+  filePath  String
+  size      Int
+  duration  Float?
+  projectId String
+  project   VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@schema("public")
+}
+
+enum TransferRequestStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  DELETED
+  EXPIRED
+
+  @@schema("public")
+}
+
+enum TransferDirection {
+  SEND
+  RECEIVE
+
+  @@schema("public")
+}
+
+enum ParticipantRole {
+  SOURCE
+  TARGET
+
+  @@schema("public")
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  COMPLETED
+
+  @@schema("public")
+}
+
+model TransferRequest {
+  id            String                @id @default(cuid())
+  direction     TransferDirection
+  status        TransferRequestStatus @default(PENDING)
+  projectId     String?
+  projectName   String?
+  fragmentIds   String[]
+  fragmentNames String[]
+  message       String?
+  expiresAt     DateTime
+  createdAt     DateTime              @default(now())
+
+  participants TransferRequestParticipant[]
+
+  @@schema("public")
+}
+
+model TransferRequestParticipant {
+  id                String            @id @default(cuid())
+  transferRequestId String
+  deviceId          String
+  role              ParticipantRole
+  status            ParticipantStatus @default(PENDING)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  transferRequest   TransferRequest   @relation(fields: [transferRequestId], references: [id], onDelete: Cascade)
+  device            Device            @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
 
   @@schema("public")
 }
