@@ -56,6 +56,7 @@ export const getTransferRequestsHandler: RouteHandler<
 
 			return
 		}
+
 		const requests = await getTransferRequestsForUserService(req.userId)
 
 		await res.code(200).send({
@@ -277,9 +278,7 @@ export const cancelParticipantHandler: RouteHandler<
 		logger.info({ deviceId, requestId: id }, "Participant cancelled")
 
 		await res.code(200).send({
-			participant: result.participant
-				? flattenParticipant(result.participant)
-				: null,
+			participant: flattenParticipant(result.participant),
 		})
 	} catch (err) {
 		logger.error(err)

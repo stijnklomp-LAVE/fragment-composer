@@ -27,7 +27,8 @@ model Device {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  participants TransferRequestParticipant[]
+  participants    TransferRequestParticipant[]
+  deviceFragments DeviceFragment[]
 
   @@schema("public")
 }
@@ -46,15 +47,33 @@ model VideoProject {
 }
 
 model Fragment {
-  id        String   @id @default(cuid())
-  name      String
-  filePath  String
-  size      Int
-  duration  Float?
-  projectId String
-  project   VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt DateTime    @default(now())
+  id              String          @id @default(cuid())
+  name            String
+  filePath        String
+  size            Int
+  duration        Float?
+  projectId       String
+  project         VideoProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creatorDeviceId String?
+  createdAt       DateTime        @default(now())
 
+  deviceFragments DeviceFragment[]
+
+  @@schema("public")
+}
+
+model DeviceFragment {
+  id              String   @id @default(cuid())
+  deviceId        String
+  fragmentId      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  updaterDeviceId String?
+
+  device   Device   @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+  fragment Fragment @relation(fields: [fragmentId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, fragmentId])
   @@schema("public")
 }
 

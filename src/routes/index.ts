@@ -2,6 +2,7 @@ import { type FastifyInstance } from "fastify"
 
 import healthRoutes from "./health"
 import authMiddleware from "@/middleware/auth"
+import deviceFragmentRoute from "./v1/deviceFragment"
 import deviceRoute from "./v1/device"
 import projectRoute from "./v1/project"
 import transferRequestRoute from "./v1/transferRequest"
@@ -15,6 +16,7 @@ export const registerRoutes = async (fastify: FastifyInstance) => {
 		async (v1) => {
 			await v1.register(authMiddleware)
 
+			await v1.register(deviceFragmentRoute)
 			await v1.register(deviceRoute)
 			await v1.register(projectRoute)
 			await v1.register(transferRequestRoute)

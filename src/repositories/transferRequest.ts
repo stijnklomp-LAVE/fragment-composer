@@ -1,14 +1,14 @@
 import { prismaClient } from "@/common/prisma"
 
 export const getTransferRequestsForUserRepo = async (userId: string) => {
-	const userDevices = await prismaClient().device.findMany({
+	const userDevices = await prismaClient.device.findMany({
 		select: { deviceId: true },
 		where: { ownerId: userId },
 	})
 
 	const deviceIds = userDevices.map((d) => d.deviceId)
 
-	return prismaClient().transferRequest.findMany({
+	return prismaClient.transferRequest.findMany({
 		include: {
 			participants: {
 				include: { device: { select: { deviceName: true } } },
@@ -32,12 +32,12 @@ export const createTransferRequestRepo = async (data: {
 	projectId: string | null
 	projectName: string | null
 }) =>
-	prismaClient().transferRequest.create({
+	prismaClient.transferRequest.create({
 		data,
 	})
 
 export const getTransferRequestByIdRepo = async (id: string) =>
-	prismaClient().transferRequest.findUnique({
+	prismaClient.transferRequest.findUnique({
 		include: {
 			participants: {
 				include: {
@@ -52,7 +52,7 @@ export const updateTransferRequestStatusRepo = async (
 	id: string,
 	status: "ACTIVE" | "COMPLETED" | "DELETED" | "EXPIRED",
 ) =>
-	prismaClient().transferRequest.update({
+	prismaClient.transferRequest.update({
 		data: { status },
 		include: {
 			participants: {

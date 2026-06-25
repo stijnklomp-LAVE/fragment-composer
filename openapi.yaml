@@ -39,6 +39,90 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/def-0"
+  /v1/device-fragments:
+    get:
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - deviceFragments
+                properties:
+                  deviceFragments:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - fragmentId
+                          - projectId
+                        properties:
+                          fragmentId:
+                            type: string
+                          projectId:
+                            type: string
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/devices/{deviceId}/fragments:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fragmentIds
+              properties:
+                fragmentIds:
+                  type: array
+                  items:
+                    type: string
+      parameters:
+        - schema:
+            minLength: 1
+            type: string
+          in: path
+          name: deviceId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
   /v1/devices:
     post:
       requestBody:

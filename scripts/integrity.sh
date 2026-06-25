@@ -37,4 +37,4 @@ ${BUN_RUN} bun run lint
 ${BUN_RUN} bun run test:unit
 
 # Run acceptance tests
-docker compose --profile test up --build --attach acceptance-once --exit-code-from acceptance-once
+docker compose --profile test up --build --attach acceptance-once --exit-code-from acceptance-once # TODO: Fix failing acceptance test script

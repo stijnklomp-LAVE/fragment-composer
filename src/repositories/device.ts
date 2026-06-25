@@ -8,7 +8,7 @@ type RegisterInput = {
 export const registerDeviceRepo = async (data: RegisterInput) => {
 	const { ownerId, ...rest } = data
 
-	return prismaClient().device.create({
+	return prismaClient.device.create({
 		data: {
 			...rest,
 			owner: { connect: { id: ownerId } },
@@ -17,7 +17,7 @@ export const registerDeviceRepo = async (data: RegisterInput) => {
 }
 
 export const getDevicesForOwnerRepo = async (ownerId: string) =>
-	prismaClient().device.findMany({ where: { ownerId } })
+	prismaClient.device.findMany({ where: { ownerId } })
 
 export const getDeviceByIdRepo = async (deviceId: string) =>
-	prismaClient().device.findUnique({ where: { deviceId } })
+	prismaClient.device.findUnique({ where: { deviceId } })

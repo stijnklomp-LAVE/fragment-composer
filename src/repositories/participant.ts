@@ -8,7 +8,7 @@ export const createParticipantsRepo = async (
 	}[],
 ) => {
 	for (const p of participants) {
-		await prismaClient().transferRequestParticipant.create({ data: p })
+		await prismaClient.transferRequestParticipant.create({ data: p })
 	}
 }
 
@@ -17,14 +17,15 @@ export const updateParticipantStatusRepo = async (
 	deviceId: string,
 	status: "ACCEPTED" | "REJECTED" | "CANCELLED" | "COMPLETED",
 ) => {
-	const participant =
-		await prismaClient().transferRequestParticipant.findFirst({
+	const participant = await prismaClient.transferRequestParticipant.findFirst(
+		{
 			where: { deviceId, transferRequestId: id },
-		})
+		},
+	)
 
 	if (!participant) return null
 
-	return prismaClient().transferRequestParticipant.update({
+	return prismaClient.transferRequestParticipant.update({
 		data: { status },
 		include: { device: { select: { deviceName: true } } },
 		where: { id: participant.id },
@@ -34,6 +35,6 @@ export const updateParticipantStatusRepo = async (
 export const getParticipantStatusesForRequestRepo = async (
 	transferRequestId: string,
 ) =>
-	prismaClient().transferRequestParticipant.findMany({
+	prismaClient.transferRequestParticipant.findMany({
 		where: { transferRequestId },
 	})

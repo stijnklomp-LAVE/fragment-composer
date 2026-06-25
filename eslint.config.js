@@ -76,7 +76,6 @@ finalConfig.push(includeIgnoreFile(gitignorePath), {
 finalConfig.push({
 	languageOptions: {
 		parserOptions: {
-			project: null,
 			projectService: true,
 			tsconfigRootDir: __dirname,
 		},

@@ -37,7 +37,7 @@ function mapProject(project: any): ProjectWithCount {
 /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
 export const getProjectsForOwnerRepo = async (ownerId: string) => {
-	const projects = await prismaClient().videoProject.findMany({
+	const projects = await prismaClient.videoProject.findMany({
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		include: { _count: { select: { fragments: true } } },
 		orderBy: { updatedAt: "desc" },
@@ -48,7 +48,7 @@ export const getProjectsForOwnerRepo = async (ownerId: string) => {
 }
 
 export const getProjectsWithFragmentsForOwnerRepo = async (ownerId: string) => {
-	const projects = await prismaClient().videoProject.findMany({
+	const projects = await prismaClient.videoProject.findMany({
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		include: { _count: { select: { fragments: true } }, fragments: true },
 		orderBy: { updatedAt: "desc" },
@@ -65,7 +65,7 @@ export const createProjectRepo = async (data: {
 }) => {
 	const { ownerId, ...rest } = data
 
-	const project = await prismaClient().videoProject.create({
+	const project = await prismaClient.videoProject.create({
 		data: {
 			...rest,
 			owner: { connect: { id: ownerId } },
@@ -78,7 +78,7 @@ export const createProjectRepo = async (data: {
 }
 
 export const getProjectByIdRepo = async (projectId: string) => {
-	const project = await prismaClient().videoProject.findUnique({
+	const project = await prismaClient.videoProject.findUnique({
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		include: { _count: { select: { fragments: true } }, fragments: true },
 		where: { id: projectId },
@@ -93,7 +93,7 @@ export const updateProjectRepo = async (
 	projectId: string,
 	data: { name?: string; description?: string | null },
 ) => {
-	const project = await prismaClient().videoProject.update({
+	const project = await prismaClient.videoProject.update({
 		data,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		include: { _count: { select: { fragments: true } } },
@@ -104,4 +104,4 @@ export const updateProjectRepo = async (
 }
 
 export const deleteProjectRepo = async (projectId: string) =>
-	prismaClient().videoProject.delete({ where: { id: projectId } })
+	prismaClient.videoProject.delete({ where: { id: projectId } })
