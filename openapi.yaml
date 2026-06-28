@@ -324,6 +324,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}/fragments:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filePath
+                - name
+                - size
+              properties:
+                duration:
+                  minimum: 0
+                  type: number
+                filePath:
+                  minLength: 1
+                  type: string
+                name:
+                  maxLength: 200
+                  minLength: 1
+                  type: string
+                size:
+                  minimum: 0
+                  type: number
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - fragment
+                properties:
+                  fragment:
+                    type: object
+                    required:
+                      - createdAt
+                      - filePath
+                      - id
+                      - name
+                      - size
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      duration:
+                        type: number
+                      filePath:
+                        type: string
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      size:
+                        type: number
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
   /v1/projects:
     get:
       responses:
@@ -717,6 +793,102 @@ paths:
                 properties:
                   message:
                     type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}/settings:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - settings
+                properties:
+                  settings:
+                    type: object
+                    properties:
+                      duration:
+                        type: number
+                      fps:
+                        type: number
+                      imageFormat:
+                        type: string
+                      jpegQuality:
+                        type: number
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  type: number
+                fps:
+                  type: number
+                imageFormat:
+                  type: string
+                jpegQuality:
+                  type: number
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - settings
+                properties:
+                  settings:
+                    type: object
+                    properties:
+                      duration:
+                        type: number
+                      fps:
+                        type: number
+                      imageFormat:
+                        type: string
+                      jpegQuality:
+                        type: number
         "404":
           description: Default Response
           content:

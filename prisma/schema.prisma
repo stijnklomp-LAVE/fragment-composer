@@ -39,6 +39,7 @@ model VideoProject {
   id          String   @id @default(cuid())
   name        String
   description String?
+  settings    Json?
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   fragments   Fragment[]

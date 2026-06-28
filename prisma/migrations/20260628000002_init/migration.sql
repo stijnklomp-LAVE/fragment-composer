@@ -1,10 +1,5 @@
--- Idempotent migration: creates tables if they don't exist, adds columns if missing.
--- Handles any run order between client and fragment-composer migrations.
-
--- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
--- CreateEnum (idempotent via DO block — IF NOT EXISTS is unsupported for CREATE TYPE)
 DO $$ BEGIN
     CREATE TYPE "TransferRequestStatus" AS ENUM ('PENDING', 'ACTIVE', 'COMPLETED', 'DELETED', 'EXPIRED');
 EXCEPTION
@@ -29,11 +24,13 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- CreateTable (idempotent)
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
+
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "markedForDeletionAt" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletionScheduledAt" TIMESTAMP(3);
 
 CREATE TABLE IF NOT EXISTS "Device" (
     "deviceId" TEXT NOT NULL,
@@ -54,6 +51,8 @@ CREATE TABLE IF NOT EXISTS "VideoProject" (
     CONSTRAINT "VideoProject_pkey" PRIMARY KEY ("id")
 );
 
+ALTER TABLE "VideoProject" ADD COLUMN IF NOT EXISTS "settings" JSONB;
+
 CREATE TABLE IF NOT EXISTS "Fragment" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -61,10 +60,11 @@ CREATE TABLE IF NOT EXISTS "Fragment" (
     "size" INTEGER NOT NULL,
     "duration" DOUBLE PRECISION,
     "projectId" TEXT NOT NULL,
-    "creatorDeviceId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Fragment_pkey" PRIMARY KEY ("id")
 );
+
+ALTER TABLE "Fragment" ADD COLUMN IF NOT EXISTS "creatorDeviceId" TEXT;
 
 CREATE TABLE IF NOT EXISTS "DeviceFragment" (
     "id" TEXT NOT NULL,
@@ -101,15 +101,31 @@ CREATE TABLE IF NOT EXISTS "TransferRequestParticipant" (
     CONSTRAINT "TransferRequestParticipant_pkey" PRIMARY KEY ("id")
 );
 
--- Add columns in case the table already existed from another service's migration
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "markedForDeletionAt" TIMESTAMP(3);
-ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletionScheduledAt" TIMESTAMP(3);
-ALTER TABLE "Fragment" ADD COLUMN IF NOT EXISTS "creatorDeviceId" TEXT;
+CREATE TABLE IF NOT EXISTS "TimelineLayer" (
+    "id" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "zIndex" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "TimelineLayer_pkey" PRIMARY KEY ("id")
+);
 
--- CreateIndex (idempotent)
+CREATE TABLE IF NOT EXISTS "TimelineSegment" (
+    "id" TEXT NOT NULL,
+    "layerId" TEXT NOT NULL,
+    "fragmentId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "order" INTEGER NOT NULL,
+    "inPoint" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "outPoint" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "TimelineSegment_pkey" PRIMARY KEY ("id")
+);
+
 CREATE UNIQUE INDEX IF NOT EXISTS "DeviceFragment_deviceId_fragmentId_key" ON "DeviceFragment"("deviceId", "fragmentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "TimelineLayer_projectId_zIndex_key" ON "TimelineLayer"("projectId", "zIndex");
+CREATE INDEX IF NOT EXISTS "TimelineSegment_layerId_order_idx" ON "TimelineSegment"("layerId", "order");
 
--- AddForeignKey (idempotent via DO block)
 DO $$ BEGIN
     ALTER TABLE "Device" ADD CONSTRAINT "Device_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 EXCEPTION
@@ -152,33 +168,6 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- CreateTable (idempotent) -- TimelineLayer and TimelineSegment for timeline editing
-CREATE TABLE IF NOT EXISTS "TimelineLayer" (
-    "id" TEXT NOT NULL,
-    "projectId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "zIndex" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "TimelineLayer_pkey" PRIMARY KEY ("id")
-);
-
-CREATE TABLE IF NOT EXISTS "TimelineSegment" (
-    "id" TEXT NOT NULL,
-    "layerId" TEXT NOT NULL,
-    "fragmentId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
-    "inPoint" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "outPoint" DOUBLE PRECISION NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "TimelineSegment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex (idempotent)
-CREATE UNIQUE INDEX IF NOT EXISTS "TimelineLayer_projectId_zIndex_key" ON "TimelineLayer"("projectId", "zIndex");
-CREATE INDEX IF NOT EXISTS "TimelineSegment_layerId_order_idx" ON "TimelineSegment"("layerId", "order");
-
--- AddForeignKey (idempotent via DO block)
 DO $$ BEGIN
     ALTER TABLE "TimelineLayer" ADD CONSTRAINT "TimelineLayer_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "VideoProject"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 EXCEPTION

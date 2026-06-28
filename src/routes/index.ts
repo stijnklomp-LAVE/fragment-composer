@@ -5,7 +5,9 @@ import accountCleanupRoute from "./v1/accountCleanup"
 import authMiddleware from "@/middleware/auth"
 import deviceFragmentRoute from "./v1/deviceFragment"
 import deviceRoute from "./v1/device"
+import fragmentRoute from "./v1/fragment"
 import projectRoute from "./v1/project"
+import projectSettingsRoute from "./v1/projectSettings"
 import timelineRoute from "./v1/timeline"
 import transferRequestRoute from "./v1/transferRequest"
 import signalingRoute from "./v1/signaling"
@@ -21,7 +23,9 @@ export const registerRoutes = async (fastify: FastifyInstance) => {
 
 			await v1.register(deviceFragmentRoute)
 			await v1.register(deviceRoute)
+			await v1.register(fragmentRoute)
 			await v1.register(projectRoute)
+			await v1.register(projectSettingsRoute)
 			await v1.register(timelineRoute)
 			await v1.register(transferRequestRoute)
 			await v1.register(signalingRoute)
