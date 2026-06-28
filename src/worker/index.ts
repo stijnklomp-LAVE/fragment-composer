@@ -1,9 +1,53 @@
 import { type Channel, type ConsumeMessage } from "amqplib"
 
 import { logger } from "@/common/logger"
+import { prismaClient } from "@/common/prisma"
 import { queueClient } from "@/infrastructure/rabbitMQ"
 
-const processTask = (task: string): unknown => {
+const processTask = async (task: string): Promise<unknown> => {
+	let payload: Record<string, unknown>
+
+	try {
+		payload = JSON.parse(task) as Record<string, unknown>
+	} catch {
+		return { originalLength: task.length, processed: true }
+	}
+
+	if (payload.type === "account-deletion") {
+		const userId = payload.userId as string
+
+		if (!userId) {
+			return { error: "Missing userId in account-deletion payload" }
+		}
+
+		logger.info({ userId }, "Processing account deletion")
+
+		try {
+			await prismaClient.$transaction(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				async (tx: any) => {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+					await tx.transferRequest.deleteMany({
+						where: {
+							participants: { none: {} },
+						},
+					})
+
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+					await tx.user.delete({ where: { id: userId } })
+				},
+			)
+
+			logger.info({ userId }, "Account deletion completed")
+
+			return { deletionResult: "completed", userId }
+		} catch (err) {
+			logger.error({ err, userId }, "Account deletion failed")
+
+			return { deletionResult: "failed", error: String(err), userId }
+		}
+	}
+
 	return { originalLength: task.length, processed: true }
 }
 
@@ -39,7 +83,7 @@ export const startWorker = async () => {
 					"Worker received message",
 				)
 
-				const result = processTask(content)
+				const result = await processTask(content)
 
 				logger.info({ result }, "Worker processed message")
 				channel.ack(msg)

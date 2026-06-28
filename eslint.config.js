@@ -54,6 +54,15 @@ const addedConfigs = [
 						match: true,
 					},
 				},
+				{
+					// Redis SET options (EX, PX, NX, XX, GET, etc.)
+					selector: "objectLiteralProperty",
+					format: null,
+					filter: {
+						regex: "^(EX|PX|NX|XX|GET|KEEPTTL)$",
+						match: true,
+					},
+				},
 			],
 		},
 	},
@@ -70,6 +79,7 @@ finalConfig.push(includeIgnoreFile(gitignorePath), {
 		"prisma.config.ts",
 		"eslint.config.js",
 		".opencode/",
+		"pacts/",
 	],
 })
 

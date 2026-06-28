@@ -52,7 +52,7 @@ bun run build && DEPLOYMENT_MODE=worker bun run start # Worker
 docker build -t fragment-composer .
 
 # API
-docker run --rm fragment-composer
+docker run --rm -p 3001:3001 fragment-composer
 
 # Worker
 docker run --rm -e DEPLOYMENT_MODE=worker fragment-composer

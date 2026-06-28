@@ -19,3 +19,4 @@ test/feature/reports
 test/unit/coverage
 test/unit/reports
 openapi.yaml
+pacts

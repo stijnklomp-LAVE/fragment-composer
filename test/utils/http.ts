@@ -58,6 +58,11 @@ export const createMockResponse = () => {
 
 			return response
 		}),
+		status: mock((code: number) => {
+			statusCode = code
+
+			return response
+		}),
 	}
 
 	return {

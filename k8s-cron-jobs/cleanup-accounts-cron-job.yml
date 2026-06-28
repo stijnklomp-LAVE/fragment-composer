@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-accounts
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: oven/bun:alpine
+              command:
+                - sh
+                - -c
+                - >
+                  curl -X POST http://fragment-composer:3001/internal/account-cleanup/process-expired

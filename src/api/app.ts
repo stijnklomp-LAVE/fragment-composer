@@ -1,6 +1,10 @@
-import fastify, { type FastifyServerOptions } from "fastify"
+import fastify, {
+	type FastifySchemaValidationError,
+	type FastifyServerOptions,
+} from "fastify"
 import { type TypeBoxTypeProvider } from "@fastify/type-provider-typebox"
 import fastifySwagger from "@fastify/swagger"
+import { type FastifyError } from "@fastify/error"
 import hyperid from "hyperid"
 import { writeFileSync } from "node:fs"
 
@@ -10,9 +14,15 @@ import { registerRoutes } from "@/routes/index"
 import { cacheClient } from "@/infrastructure/cache"
 import { queueClient } from "@/infrastructure/rabbitMQ"
 
+type FastifyErrorHandlerError = FastifyError & {
+	validation?: FastifySchemaValidationError[]
+	validationContext?: string
+}
+
 const port = Number(process.env.API_PORT ?? 3001)
 const genReqId = hyperid({ fixedLength: true, urlSafe: true })
-const buildApp = (
+
+export const buildApp = (
 	fastifyOptions: FastifyServerOptions = {
 		genReqId,
 		logger: loggerConfig ?? false,
@@ -55,6 +65,25 @@ const buildApp = (
 				{ description: "Code related end-points", name: "code" },
 			],
 		},
+	})
+
+	app.setErrorHandler<FastifyErrorHandlerError>((error, _request, reply) => {
+		if (error.validation) {
+			logger.warn(
+				{
+					message: error.message,
+					path: error.validationContext,
+					validation: error.validation,
+				},
+				"Request validation failed",
+			)
+		} else {
+			logger.error(error, "Unhandled error")
+		}
+
+		void reply
+			.status(error.statusCode ?? 500)
+			.send({ error: error.message })
 	})
 
 	void registerMiddleware(app)

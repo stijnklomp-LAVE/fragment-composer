@@ -39,6 +39,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/def-0"
+  /internal/account-cleanup/process-expired:
+    post:
+      responses:
+        "200":
+          description: Default Response
   /v1/device-fragments:
     get:
       responses:
@@ -712,6 +717,251 @@ paths:
                 properties:
                   message:
                     type: string
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}/timeline:
+    get:
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - layers
+                properties:
+                  layers:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - createdAt
+                        - id
+                        - name
+                        - projectId
+                        - segments
+                        - zIndex
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        projectId:
+                          type: string
+                        segments:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                              - createdAt
+                              - fragmentId
+                              - id
+                              - inPoint
+                              - name
+                              - order
+                              - outPoint
+                            properties:
+                              createdAt:
+                                format: date-time
+                                type: string
+                              fragmentId:
+                                type: string
+                              id:
+                                type: string
+                              inPoint:
+                                type: number
+                              name:
+                                type: string
+                              order:
+                                type: number
+                              outPoint:
+                                type: number
+                        zIndex:
+                          type: number
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}/layers:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fragmentId:
+                  type: string
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - layer
+                properties:
+                  layer:
+                    type: object
+                    required:
+                      - createdAt
+                      - id
+                      - name
+                      - projectId
+                      - segments
+                      - zIndex
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      projectId:
+                        type: string
+                      segments:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - createdAt
+                            - fragmentId
+                            - id
+                            - inPoint
+                            - name
+                            - order
+                            - outPoint
+                          properties:
+                            createdAt:
+                              format: date-time
+                              type: string
+                            fragmentId:
+                              type: string
+                            id:
+                              type: string
+                            inPoint:
+                              type: number
+                            name:
+                              type: string
+                            order:
+                              type: number
+                            outPoint:
+                              type: number
+                      zIndex:
+                        type: number
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/def-0"
+  /v1/projects/{projectId}/layers/{layerId}/segments:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fragmentId
+              properties:
+                fragmentId:
+                  minLength: 1
+                  type: string
+                name:
+                  maxLength: 200
+                  type: string
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: layerId
+          required: true
+        - schema:
+            type: string
+          in: path
+          name: projectId
+          required: true
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - segment
+                properties:
+                  segment:
+                    type: object
+                    required:
+                      - createdAt
+                      - fragmentId
+                      - id
+                      - inPoint
+                      - name
+                      - order
+                      - outPoint
+                    properties:
+                      createdAt:
+                        format: date-time
+                        type: string
+                      fragmentId:
+                        type: string
+                      id:
+                        type: string
+                      inPoint:
+                        type: number
+                      name:
+                        type: string
+                      order:
+                        type: number
+                      outPoint:
+                        type: number
         "404":
           description: Default Response
           content:

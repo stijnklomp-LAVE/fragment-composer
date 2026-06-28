@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-verification-tokens
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: oven/bun:alpine
+              command:
+                - sh
+                - -c
+                - >
+                  bunx prisma db execute --stdin <<< "DELETE FROM \"VerificationToken\" WHERE expires < NOW();"
+                  # TODO: Need to add the same for password reset requests
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-secret
+                      key: url

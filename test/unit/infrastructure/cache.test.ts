@@ -7,7 +7,7 @@ import {
 	mock,
 	spyOn,
 } from "bun:test"
-import { createClient } from "redis"
+import { createClient, type RedisClientType } from "redis"
 
 import { logger } from "@/common/logger"
 import {
@@ -17,11 +17,11 @@ import {
 } from "@/utils/process"
 import { createCacheClient } from "@/infrastructure/cache"
 
-let mockConnect: ReturnType<typeof mock<RedisClient["connect"]>>
-let mockOn: ReturnType<typeof mock<RedisClient["on"]>>
-type RedisClient = Awaited<ReturnType<typeof createClient>>
+type RedisClient = RedisClientType
 let mockClient: RedisClient
 const mockCreateClient = mock(createClient)
+let mockConnect: ReturnType<typeof mock<RedisClient["connect"]>>
+let mockOn: ReturnType<typeof mock<RedisClient["on"]>>
 
 await mock.module("redis", () => ({
 	createClient: mockCreateClient,
