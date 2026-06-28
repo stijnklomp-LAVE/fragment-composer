@@ -49,13 +49,13 @@ bun run build && DEPLOYMENT_MODE=worker bun run start # Worker
 ### With Docker
 
 ```sh
-docker build -t fragment-composer .
+docker build -t stijnklomp/fragment-composer .
 
 # API
-docker run --rm -p 3001:3001 fragment-composer
+docker run --rm -p 3001:3001 stijnklomp/fragment-composer
 
 # Worker
-docker run --rm -e DEPLOYMENT_MODE=worker fragment-composer
+docker run --rm -e DEPLOYMENT_MODE=worker stijnklomp/fragment-composer
 ```
 
 ### With Docker Compose
